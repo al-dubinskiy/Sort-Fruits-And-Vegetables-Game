@@ -5,6 +5,7 @@ export const images = {
     game_timer_bg: require('./assets/images/game_timer_bg.png'),
     wooden_plank_bg: require('./assets/images/wooden_plank_bg.png'),
     wooden_plank_texture_modal: require('./assets/images/wooden_plank_texture_modal.png'),
+    wooden_plank_with_lives_bg: require('./assets/images/wooden_plank_with_lives_bg.png'),
     caption_bg: require('./assets/images/caption_bg.png'),
     pineapple_btn: require('./assets/images/pineapple_btn.png'),
     heart_life: require('./assets/images/heart_life.png'),
