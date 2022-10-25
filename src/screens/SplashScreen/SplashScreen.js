@@ -3,6 +3,7 @@ import React from 'react'
 import { ScreenCaption } from './components/ScreenCaption'
 import { PlayBtn } from './components/PlayBtn'
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
+import { ToogleDifficulty } from './components/ToogleDifficulty/ToogleDifficulty'
 
 export default function SplashScreen({navigation}) {
   const opacity = useSharedValue(1)
@@ -30,6 +31,7 @@ export default function SplashScreen({navigation}) {
       <Image source={require('../../assets/images/veg_fruits_bg.png')} style={styles.bg_image}/>
       <View style={styles.content}>
         <ScreenCaption />
+        <ToogleDifficulty />
         <PlayBtn goToGameScreen={goToGameScreen}/>
       </View>
     </Animated.View>

@@ -7,12 +7,12 @@ import { constants } from '../../../constants'
 
 const caption_size = {
   wWidth: constants.wWidth,
-  wHeight: constants.wHeight * 0.43
+  wHeight: constants.wHeight * 0.40
 }
 
 export const ScreenCaption = () => {
   const marginTop = useSharedValue(-caption_size.wHeight)
-  const rotateX = useSharedValue(-5)
+  const rotateX = useSharedValue(10)
 
   const rCaptionStyle = useAnimatedStyle(() => {
     return {
@@ -25,7 +25,7 @@ export const ScreenCaption = () => {
 
   const animateCaption = () => {
     marginTop.value = withSpring(0)
-    rotateX.value = withRepeat(withTiming(-20, {duration: 2000}), -1, true)
+    rotateX.value = withRepeat(withTiming(-10, {duration: 2000}), -1, true)
   }
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export const ScreenCaption = () => {
 
   return (
     <Animated.View style={[styles.container, rCaptionStyle]}>
-        <Image resizeMode='contain' source={images.caption_bg} style={styles.caption_bg} />
+        <Image resizeMode='stretch' source={images.caption_bg} style={styles.caption_bg} />
         <Text style={styles.caption_text}>Sort all{'\n'}vegetables{'\n'}and fruits!</Text>
     </Animated.View>
   )
@@ -46,12 +46,9 @@ const styles = StyleSheet.create({
       height: caption_size.wHeight,
       justifyContent: 'center',
       alignItems: 'center',
-      transform: [
-        { rotateX: '10deg'},
-      ],
     },
     caption_text: {
-      fontSize: 50,
+      fontSize: 45,
       fontFamily: 'Gaegu-Bold',
       color: colors.white,
       textAlign: 'center',
