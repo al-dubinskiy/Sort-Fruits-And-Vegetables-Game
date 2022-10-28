@@ -1,13 +1,13 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React, { useEffect } from 'react'
-import Animated, { runOnJS, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming } from 'react-native-reanimated'
+import React, { useCallback } from 'react'
+import Animated, { runOnJS, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
 import { images } from '../../../../images'
 import { colors } from '../../../../colors'
 import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler'
 import { constants } from '../../../../constants'
 import { useDispatch, useSelector } from 'react-redux'
-import { useCallback } from 'react'
 import { setGameDifficultyLevel } from '../../../../redux/slices/gameConfigure'
+import { gameDifficultyLevels } from '../../../../types'
 
 const toggleContainer = {
   width: (constants.wWidth * 0.12) * 3,
@@ -40,12 +40,14 @@ const toggleBtnsRange = {
 }
 
 export const ToogleDifficulty = () => {
-    const toogleBtnsBgColors = [colors.lightGreen, colors.lightOrange, colors.lightRed]
+    const {level, colorIndicator} = useSelector(state => state.gameConfigure.gameDifficultyLevel)
+
+    if (!level || !colorIndicator) return null
+    
     const opacity = useSharedValue(1)
     const translateX = useSharedValue(0)
-    const backgroundColor = useSharedValue(toogleBtnsBgColors[0])
+    const backgroundColor = useSharedValue(colorIndicator)
 
-    const gameDifficultyLevel = useSelector(state => state.gameConfigure.gameDifficultyLevel)
     const dispatch = useDispatch()
 
     const rMovingBlockStyle = useAnimatedStyle(() => {
@@ -58,49 +60,44 @@ export const ToogleDifficulty = () => {
         }
     }, [])
 
-    const updateDispatch = useCallback((level) => {
-      dispatch(setGameDifficultyLevel(level))
+    const updateDispatch = useCallback((index) => {
+      let curLevel = gameDifficultyLevels[index]
+      backgroundColor.value = curLevel.colorIndicator
+      dispatch(setGameDifficultyLevel(curLevel))
     }, [])
 
     const panGestureEvent = useAnimatedGestureHandler({
-        onStart: (event, context) => {
-          context.translateX = translateX.value
-        },
-        onActive: (event, context) => {
-          let absoluteX_left = event.absoluteX - (constants.wWidth * 0.13 / 2)
-          let absoluteX_right = event.absoluteX + (constants.wWidth * 0.13 / 2)
+      onStart: (event, context) => {
+        context.translateX = translateX.value
+      },
+      onActive: (event, context) => {
+        let absoluteX_left = event.absoluteX - (constants.wWidth * 0.13 / 2)
+        let absoluteX_right = event.absoluteX + (constants.wWidth * 0.13 / 2)
 
-          // console.log(toggleFieldCoord)
-          // console.log(event)
-          // console.log(absoluteX_left)
-          // console.log(absoluteX_right)
+        if (absoluteX_left > toggleFieldCoord.x1 && absoluteX_right < toggleFieldCoord.x2)
+          translateX.value = event.translationX + context.translateX
+      },
+      onEnd: (event, context) => {
+        let mElementRightSide = event.absoluteX 
+        let gameDifficultyLevel_index = 0
 
-          if (absoluteX_left > toggleFieldCoord.x1 && absoluteX_right < toggleFieldCoord.x2)
-            translateX.value = event.translationX + context.translateX
-        },
-        onEnd: (event, context) => {
-          let mElementRightSide = event.absoluteX 
-
-          if (mElementRightSide > toggleBtnsRange[3].x1) // 3 button
-          {
-            translateX.value = withSpring(moveElementSize.width * 2)
-            runOnJS(updateDispatch)(3)
-          }
-          else if (mElementRightSide > toggleBtnsRange[2].x1) // 2 button
-          {
-            translateX.value = withSpring(moveElementSize.width)
-            runOnJS(updateDispatch)(2)
-          }
-          else if (mElementRightSide > toggleBtnsRange[1].x1) { // 1 button
-            translateX.value = withSpring(0)
-            runOnJS(updateDispatch)(1)
-          }
-        },
-    })
-
-    useEffect(() => {
-        
-    }, [])
+        if (mElementRightSide > toggleBtnsRange[3].x1) // 3 button
+        {
+          translateX.value = withSpring(moveElementSize.width * 2)
+          gameDifficultyLevel_index = 2
+        }
+        else if (mElementRightSide > toggleBtnsRange[2].x1) // 2 button
+        {
+          translateX.value = withSpring(moveElementSize.width)
+          gameDifficultyLevel_index = 1
+        }
+        else if (mElementRightSide > toggleBtnsRange[1].x1) { // 1 button
+          translateX.value = withSpring(0)
+          gameDifficultyLevel_index = 0
+        }
+        runOnJS(updateDispatch)(gameDifficultyLevel_index)
+      },
+  })
 
   return (
     <GestureHandlerRootView style={[styles.container]}>
@@ -108,7 +105,7 @@ export const ToogleDifficulty = () => {
        <Text style={[styles.caption_text, { color: colors.white }]}>Difficulty level</Text>
         <View style={styles.toggle_container}>
           <View style={styles.btns}>
-              <Text style={[styles.btn_text, { color: colors.lightRed }]}>1</Text>
+              <Text style={[styles.btn_text, { color: colors.lightGreen }]}>1</Text>
           </View>
           <View style={styles.btns}>
               <Text style={[styles.btn_text, { color: colors.lightOrange }]}>2</Text>
@@ -118,10 +115,9 @@ export const ToogleDifficulty = () => {
           </View>
 
           <PanGestureHandler onGestureEvent={panGestureEvent}>
-            <Animated.View style={[styles.moving_block, rMovingBlockStyle]}>
-              
+            <Animated.View style={[styles.moving_block, {backgroundColor: colorIndicator}, rMovingBlockStyle]}>
               <TouchableOpacity>
-                <Text style={styles.cur_btn_text}>{ gameDifficultyLevel }</Text>
+                <Text style={styles.cur_btn_text}>{ level }</Text>
               </TouchableOpacity> 
             </Animated.View>
           </PanGestureHandler>

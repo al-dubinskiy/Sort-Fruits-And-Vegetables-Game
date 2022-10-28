@@ -1,13 +1,13 @@
-import { Image, StyleSheet, Text, TouchableOpacity } from 'react-native'
-import React, { useCallback, useEffect, useState } from 'react'
-import { elements } from '../../../../elementsData'
-import { types } from '../../../../types'
+import { Image, StyleSheet } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { types, typesGameEndReason } from '../../../../types'
 import Animated, { runOnJS, useAnimatedGestureHandler, useAnimatedStyle, useSharedValue, withRepeat, withSpring } from 'react-native-reanimated'
 import { GestureHandlerRootView, PanGestureHandler } from 'react-native-gesture-handler'
 import { constants } from '../../../../constants'
 import { basketDots, basketFieldSize } from '../PickingBaskets/PickingBaskets'
 import { useDispatch, useSelector } from 'react-redux'
-import { updateFruits, updateVegetables } from '../../../../redux/slices/movingElements'
+import { setIsHighlightBasket, setIsRemoveHeart, updateFruits, updateVegetables } from '../../../../redux/slices/movingElements'
+import { setGameEndState } from '../../../../redux/slices/gameConfigure'
 
 const ELEMENT_SIZE = {
     width: constants.wWidth * 0.2,
@@ -15,11 +15,9 @@ const ELEMENT_SIZE = {
 }
 
 export default function RanderElement() {
-    const [isRandomingElement, setIsRandomingElement] = useState(true)
+    const elements = useSelector(state => state.movingElements.elements)
     const [curElement, setCurElement] = useState(null)
 
-    const {fruits, vegetables} = useSelector(state => state.movingElements)
-   
     const opacity = useSharedValue(1)
     const scale = useSharedValue(1)
     const translateX = useSharedValue(0)
@@ -27,23 +25,29 @@ export default function RanderElement() {
 
     const dispatch = useDispatch()
 
-    const addElementInBasket = useCallback(({basketType, curElement}) => {
-        console.log(basketType, curElement)
+    const addElementInBasket = ({basketType}) => {
+        opacity.value = withSpring(0)
         if (basketType == curElement.data.type) { // if element type == basket for this type
             if (curElement.data.type == types.fruit) {
-                dispatch(updateFruits(...elements.splice(curElement.index, 1)))
+                dispatch(updateFruits(curElement))
             }
             else if (curElement.data.type == types.vegetable) {
-                dispatch(updateVegetables(...elements.splice(curElement.index, 1)))
+                dispatch(updateVegetables(curElement))
             }
+        }
+        else { // highlight of basket if getted error
+            if (curElement.data.type == types.fruit)
+                dispatch(setIsHighlightBasket({right: true}))
+            else if (curElement.data.type == types.vegetable)
+                dispatch(setIsHighlightBasket({left: true}))
 
-            opacity.value = withSpring(0)
-
+            setTimeout(() => {
+                dispatch(setIsHighlightBasket({left: false, right: false}))
+                dispatch(setIsRemoveHeart(true))
+            }, 1000)
             randomElement()
         }
-       
-            
-    } , [])
+    }
 
     const panGestureEvent = useAnimatedGestureHandler({
         onStart: (event, context) => {
@@ -57,13 +61,9 @@ export default function RanderElement() {
         onEnd: (event) => {
             let absoluteY = event.absoluteY - ELEMENT_SIZE.height / 2
             let absoluteX = event.absoluteX - ELEMENT_SIZE.width / 2
-            // console.log(event)
-            // console.log(basketDots)
             if (absoluteY > basketDots.y1 && absoluteY< basketDots.y2) {
-                // console.log(1)
                 if (absoluteX > basketDots.leftBasket.x1 && absoluteX < basketDots.leftBasket.x2) // left basket
                 {
-                    // console.log(2)
                     translateX.value = withSpring((
                         ((basketDots.leftBasket.x2 - basketDots.leftBasket.x1) / 2)
                         - (basketFieldSize.width / 2)
@@ -74,16 +74,10 @@ export default function RanderElement() {
                         - (basketFieldSize.height / 2)
                     ))
 
-                    runOnJS(addElementInBasket)(
-                        { 
-                            basketType: types.fruit, 
-                            curElement: curElement
-                        }
-                    )
+                    runOnJS(addElementInBasket)({ basketType: types.fruit })
                 }
                 if (absoluteX > basketDots.rightBasket.x1 && absoluteX < basketDots.rightBasket.x2) // right basket
                 {
-                    // console.log(3)
                     translateX.value = withSpring(((
                         basketFieldSize.width / 2)
                         - ((basketDots.rightBasket.x2 - basketDots.rightBasket.x1) / 2)
@@ -93,14 +87,8 @@ export default function RanderElement() {
                         - (constants.wHeight / 2)
                         - (basketFieldSize.height / 2)
                     ))
-                    // проверка на принадлежность добавленного обьекта "овощу"
-                    
-                    runOnJS(addElementInBasket)(
-                        { 
-                            basketType: types.vegetable, 
-                            curElement: curElement
-                        }
-                    )
+
+                    runOnJS(addElementInBasket)({ basketType: types.vegetable })
                 }
             }
         },
@@ -109,7 +97,6 @@ export default function RanderElement() {
     const animateElementDefault = () => {
         translateX.value = withSpring(0)
         translateY.value = withSpring(0)
-        scale.value = withRepeat(withSpring(1.1), -1, true)
         opacity.value = withSpring(1)
     }
     
@@ -126,46 +113,34 @@ export default function RanderElement() {
     })
 
     const randomElement = () => {
-        let rIndex = Math.floor(Math.random() * ((elements.length - 1) - 0) + 0);
-        setCurElement({ index: rIndex, data: elements[rIndex]})
         animateElementDefault()
-        setIsRandomingElement(false)
-    }
-    
-    // Add element in basket animation 
-    const addElementInBasketAnimate = ({type_of_basket}) => {
-        if (type_of_basket == 'fruit') {
-            
-        }
-        
-        if (type_of_basket == 'vegetable') {
-    
-        }
+        let rIndex = Math.floor(Math.random() * ((elements.length - 1) - 0) + 0);
+        let cur_element = { index: rIndex, data: elements[rIndex] }
+        setCurElement(cur_element)
     }
 
     useEffect(() => {
-        // animateElementDefault()
+        scale.value = withRepeat(withSpring(1.1), -1, true)
     }, [])
 
     useEffect(() => {
-        if (isRandomingElement) randomElement()
-    }, [isRandomingElement])
+        if (elements.length) randomElement()
+        else {
+            dispatch(setGameEndState({
+                value: true,
+                reason: typesGameEndReason.youWin
+            }))
+        } 
+    }, [elements])
 
-
-    // if (isSetElementInBasket.state) console.log(777)
     if (!curElement) return null
-
     return (
         <GestureHandlerRootView style={styles.container}>
             <PanGestureHandler onGestureEvent={panGestureEvent}>
                 <Animated.View style={[styles.element, rStyle]}>
-                    <Image resizeMode='contain' source={curElement.data.img_link} style={styles.elementImg}></Image>
+                    <Image resizeMode='contain' source={curElement.data.img_link} style={styles.elementImg}/>
                 </Animated.View>
             </PanGestureHandler>
-            
-            <TouchableOpacity onPress={() => setIsRandomingElement(true)}>
-                <Text>Change</Text> 
-            </TouchableOpacity>
         </GestureHandlerRootView>
     )
 }

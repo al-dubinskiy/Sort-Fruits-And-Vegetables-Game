@@ -1,24 +1,40 @@
 import React from 'react'
 import { useState, useEffect } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import { colors } from '../../../../../colors';
-import { images } from '../../../../../images';
+import { setGameEndState } from '../../../../../redux/slices/gameConfigure';
+import { typesGameEndReason } from '../../../../../types';
 
-export const CountDownTimer = ({ initialTime }) => {
-    const [minutes, setMinutes] = useState(initialTime.min);
-    const [seconds, setSeconds] = useState(initialTime.sec);
+export const CountDownTimer = () => {
+    const {countDownTime} = useSelector(state => state.gameConfigure.gameDifficultyLevel)
+    const {value} = useSelector(state => state.gameConfigure.gameEndState)
+    if (!countDownTime) return null
 
-    useEffect(()=>{
+    const [timer, setTimer] = useState({
+        min: 0,
+        sec: 0,
+    })
+
+    const dispatch = useDispatch()
+
+    useEffect(() => {
         let myInterval = setInterval(() => {
-            if (seconds > 0) {
-                setSeconds(seconds - 1);
+            if (timer.sec > 0) {
+                setTimer({...timer, sec: timer.sec - 1})
             }
-            if (seconds === 0) {
-                if (minutes === 0) {
+            if (timer.sec === 0) {
+                if (timer.min === 0) {
                     clearInterval(myInterval)
+                    dispatch(setGameEndState({
+                        value: true,
+                        reason: typesGameEndReason.timeIsUp
+                    }))
                 } else {
-                    setMinutes(minutes - 1);
-                    setSeconds(59);
+                    setTimer({
+                        min: timer.min - 1,
+                        sec: 59
+                    })
                 }
             } 
         }, 1000)
@@ -27,10 +43,16 @@ export const CountDownTimer = ({ initialTime }) => {
         };
     });
 
+    useEffect(()=> {
+        if (!value) setTimer({
+            min: countDownTime.min,
+            sec: countDownTime.sec,
+        })
+    }, [value])
+
     return (
         <View style={styles.game_timer}>
-          <Image resizeMode='contain' source={images.game_timer_bg} style={styles.game_timer_bg}/>
-          <Text style={styles.game_timer_text}>{minutes}:{seconds}</Text>
+          <Text style={styles.game_timer_text}>{timer.min}:{timer.sec}</Text>
         </View>
     )
 }
@@ -39,21 +61,37 @@ const styles = StyleSheet.create({
     game_timer: {
         justifyContent: 'center',
         alignItems: 'center',
-        width: '40%',
         height: '100%',
+        borderRadius: 20,
+        backgroundColor: colors.white,
+        paddingHorizontal: 15
     },
-    game_timer_bg: {
-        width: '100%',
-        height: '100%',
-        position: 'absolute',
-        zIndex: 0
-    }, 
     game_timer_text: {
-        position: 'absolute',
-        zIndex: 1,
-        top: '25%',
         fontSize: 37,
         fontFamily: 'Gaegu-Bold',
-        color: colors.white,
+        color: colors.lightBrown,
     },
 })
+
+// useEffect(() => {
+//     let myInterval = setInterval(() => {
+//         if (seconds > 0) {
+//             setSeconds(seconds - 1);
+//         }
+//         if (seconds === 0) {
+//             if (minutes === 0) {
+//                 clearInterval(myInterval)
+//                 dispatch(setGameEndState({
+//                     value: true,
+//                     reason: typesGameEndReason.timeIsUp
+//                 }))
+//             } else {
+//                 setMinutes(minutes - 1);
+//                 setSeconds(59);
+//             }
+//         } 
+//     }, 1000)
+//     return ()=> {
+//         clearInterval(myInterval);
+//     };
+// });

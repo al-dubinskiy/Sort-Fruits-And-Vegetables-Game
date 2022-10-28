@@ -1,7 +1,7 @@
 import { images } from "./images"
 import { types } from "./types"
 
-export const elements = [
+export const elementsData = [
     { title: 'apple', img_link: images.apple, type: types.fruit, isCollect: false },
     { title: 'banana', img_link: images.banana, type: types.fruit, isCollect: false },
     { title: 'kiwi', img_link: images.kiwi, type: types.fruit, isCollect: false },

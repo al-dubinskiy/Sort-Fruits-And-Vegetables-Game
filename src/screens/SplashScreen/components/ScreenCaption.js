@@ -1,4 +1,4 @@
-import {Dimensions, Image, StyleSheet, Text, View } from 'react-native'
+import { Image, StyleSheet, Text } from 'react-native'
 import React, { useEffect } from 'react'
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming } from 'react-native-reanimated'
 import { colors } from '../../../colors'

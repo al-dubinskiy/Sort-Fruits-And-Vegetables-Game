@@ -2,39 +2,23 @@ import { Image, StyleSheet, View } from 'react-native'
 import React from 'react'
 import { ScreenCaption } from './components/ScreenCaption'
 import { PlayBtn } from './components/PlayBtn'
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
 import { ToogleDifficulty } from './components/ToogleDifficulty/ToogleDifficulty'
 
 export default function SplashScreen({navigation}) {
-  const opacity = useSharedValue(1)
-
-  const screenStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value 
-    }
-  }, [])
-  
-  const hideScreenAnimate = () => {
-    opacity.value = withTiming(0, {duration: 1000})
-  }
 
   const goToGameScreen = () => {
-    hideScreenAnimate()
-
-    setTimeout(() => {
-      navigation.navigate('GameScreen')
-    }, 1700)
+    navigation.navigate('GameScreen')
   }
 
   return (
-    <Animated.View style={[styles.container, screenStyle]}>
+    <View style={[styles.container]}>
       <Image source={require('../../assets/images/veg_fruits_bg.png')} style={styles.bg_image}/>
       <View style={styles.content}>
         <ScreenCaption />
         <ToogleDifficulty />
         <PlayBtn goToGameScreen={goToGameScreen}/>
       </View>
-    </Animated.View>
+    </View>
   )
 }
 

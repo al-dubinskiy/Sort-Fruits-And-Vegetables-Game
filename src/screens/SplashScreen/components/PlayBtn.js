@@ -1,6 +1,6 @@
 import { Image, StyleSheet, Text, TouchableOpacity } from 'react-native'
 import React, { useEffect } from 'react'
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming  } from 'react-native-reanimated'
+import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSpring } from 'react-native-reanimated'
 import { colors } from '../../../colors'
 import { constants } from '../../../constants'
 import { images } from '../../../images'

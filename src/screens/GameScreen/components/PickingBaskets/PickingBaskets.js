@@ -2,10 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { colors } from '../../../../colors'
 import { images } from '../../../../images'
 import { constants } from '../../../../constants';
-import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { types } from '../../../../types';
-import { elements } from '../../../../elementsData';
 import { useSelector } from 'react-redux';
 
 export const basketFieldSize = {
@@ -26,35 +24,17 @@ export const basketDots = { // backets fiels
     y2: basketFieldSize.height * 0.17 + basketFieldSize.height,
 }
 
-const randomRange = {
-    leftBasket: {
-        minX: basketDots.leftBasket.x1,
-        maxX: basketDots.leftBasket.x2
-    },
-    rightBasket: {
-        minX: basketDots.rightBasket.x1,
-        maxX: basketDots.rightBasket.x2
-    },
-    minY: basketDots.y1,
-    maxY: basketDots.y2,
-}
-
 export default function PickingBaskets() {
+    const {fruits, vegetables, isHighlightBasket} = useSelector(state => state.movingElements)
+    const [drawFruits, setDrawFruits] = useState([])
+    const [drawVegetables, setDrawVegetables] = useState([])
 
-    const {fruits, vegetables} = useSelector(state => state.movingElements)
-    console.log(fruits)
-
-    const [isHighlightBasket, setIsHighlightBasket] = useState({
-        left: true,
-        right: false
-    })
-
-    const rotate = useSharedValue(10)
+    const rotateX = useSharedValue(15)
 
     const rotateBasketStyle = useAnimatedStyle(() => {
         return {
             transform: [
-                { rotateX: rotate.value + 'deg' }
+                { rotateX: rotateX.value + 'deg' }
             ]
         }
     })
@@ -72,20 +52,30 @@ export default function PickingBaskets() {
     }
 
     useEffect(() => {
-        rotate.value = withRepeat(withTiming(10, {duration: 700}) , -1, true)
+        rotateX.value = withRepeat(withTiming(15, {duration: 700}) , -1, true)
     }, [])
+
+    useEffect(() => {
+        setDrawFruits(
+            drawElementsInBasket(fruits)
+        )
+    }, [fruits])
+
+    useEffect(() => {
+        setDrawVegetables(
+            drawElementsInBasket(vegetables)
+        )
+    }, [vegetables])
 
     return (
         <View style={styles.picking_baskets}>
             <View style={[styles.backet, isHighlightBasket.left ? styles.highlight_basket : null]}>
                 <Animated.View style={[{width: '100%', height: '100%'}, rotateBasketStyle]}>
                     <Image source={images.basket_empty} style={styles.basket_bg}/>
-                    {
-                      drawElementsInBasket(fruits)
-                    }
+                    { drawFruits }
                 </Animated.View>
                 <View style={styles.content_count}>
-                    <Text style={styles.count}>5/10</Text>
+                    <Text style={styles.count}>{fruits.length}/10</Text>
                     <Text style={styles.type}>Fruits</Text>
                 </View>
             </View>
@@ -93,12 +83,10 @@ export default function PickingBaskets() {
             <View style={[styles.backet, isHighlightBasket.right ? styles.highlight_basket : null]}>
                 <Animated.View style={[{width: '100%', height: '100%'}, rotateBasketStyle]}>
                     <Image source={images.basket_empty} style={styles.basket_bg}/> 
-                    {
-                      drawElementsInBasket(vegetables)
-                    }
+                    { drawVegetables }
                 </Animated.View>
                 <View style={styles.content_count}>
-                    <Text style={styles.count}>5/10</Text>
+                    <Text style={styles.count}>{vegetables.length}/8</Text>
                     <Text style={styles.type}>Vegetables</Text>
                 </View>
             </View>
@@ -121,7 +109,6 @@ const styles = StyleSheet.create({
     backet: {
         width: constants.wWidth * 0.4,
         height: constants.wWidth * 0.4,
-        borderRadius: 30,
         padding: 5,
         alignItems: 'center'
     },
@@ -132,14 +119,8 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     highlight_basket: {
-        shadowColor: colors.lightRed,
-        shadowOffset: {
-          width: 0,
-          height: 3,
-        },
-        shadowOpacity: 0.9,
-        shadowRadius: 1.65,
-        elevation: 6,
+       backgroundColor: colors.lightRed,
+       borderRadius: 30,
     },
     basket_el: {
         position: 'absolute', 

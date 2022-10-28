@@ -1,53 +1,43 @@
 import { Image, StyleSheet, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { images } from '../../../../../images'
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated'
+import { useDispatch, useSelector } from 'react-redux'
+import { takeOffHeart } from '../../../../../redux/slices/movingElements'
+import { typesGameEndReason } from '../../../../../types'
+import { setGameEndState } from '../../../../../redux/slices/gameConfigure'
 
-export default function HeartsLife({isRemoveHeart, setIsRemoveHeart}) {
-  const [hearts, setHearts] = useState({
-    visibleCount: 3,
-    data: [
-      { id: 1, scale: useSharedValue(1) },
-      { id: 2, scale: useSharedValue(1) },
-      { id: 3, scale: useSharedValue(1) },
-    ]
-  })
+export default function HeartsLife() {
+  const { visibleCount, data, isRemoveHeart } = useSelector(state => state.movingElements.heartsLife)
+  if (!data ) return null
 
-  const rHeartStyle = hearts.data.map((heart) => {
-    return useAnimatedStyle(() => {
-      return {
-        transform: [
-          { scale: heart.scale.value },
-        ]
-      }
-    })
-  })
+  const dispatch = useDispatch()
   
-  const removeHeartAnimate = () => {
-    hearts.data[hearts.visibleCount - 1].scale.value = withSpring(0)
-
-    setTimeout(() => {
-      setHearts({...hearts, visibleCount: --hearts.visibleCount})
-      setIsRemoveHeart(false)
-    }, 1700)
+  const removeHeart = () => {
+    dispatch(takeOffHeart())
   }
 
   useEffect(() => {
-    if (isRemoveHeart) removeHeartAnimate()
+    if (isRemoveHeart) removeHeart()
   }, [isRemoveHeart])
 
-  if (!rHeartStyle) return null
+  useEffect(() => {
+    if (visibleCount == 0) 
+      dispatch(setGameEndState({
+        value: true,
+        reason: typesGameEndReason.youLose
+      }))
+  }, [visibleCount])
   
   return (
     <View style={styles.hearts_life}>
         { 
-            hearts.data.map((_, index) => {
-                return (
-                <Animated.View style={[styles.heart, rHeartStyle[index]]} key={index}>
-                    <Image resizeMode='contain' source={images.heart_life} style={styles.heart_img}/> 
-                </Animated.View>
-                )
-            })
+          data.map((heart, index) => {
+              return (
+              <View style={[styles.heart, { opacity: heart.isVisible ? 1 : 0}]} key={index}>
+                  <Image resizeMode='contain' source={images.heart_life} style={styles.heart_img}/> 
+              </View>
+              )
+          })
         }
     </View>
   )
@@ -55,7 +45,6 @@ export default function HeartsLife({isRemoveHeart, setIsRemoveHeart}) {
 
 const styles = StyleSheet.create({
     hearts_life: {
-      width: '33%',
       height: '100%',
       flexDirection: 'row',
       justifyContent: 'space-between',

@@ -3,8 +3,13 @@ import React from 'react'
 import { colors } from '../../../../../colors'
 import { images } from '../../../../../images'
 import { constants } from '../../../../../constants'
+import { useSelector } from 'react-redux'
+import TryAgainBtn from './TryAgainBtn'
 
-export default function GameResult() {
+export default function GameResult({resetGame}) {
+  const {fruits, vegetables} = useSelector(state => state.movingElements)
+  if (!fruits || !vegetables) return null
+
   return (
       <View style={styles.content}>
         <Text style={styles.caption_modal}>Game result</Text>
@@ -12,7 +17,7 @@ export default function GameResult() {
         <View style={styles.result_row}>
           <Image resizeMode='contain' source={images.basket_with_fruits_full} style={styles.basket_image}/>
           <View style={styles.caption_wrapper}>
-            <Text style={styles.count}>25</Text>
+            <Text style={styles.count}>{fruits.length}</Text>
             <Text style={styles.caption}>fruits</Text>
           </View>
         </View>
@@ -20,10 +25,12 @@ export default function GameResult() {
         <View style={styles.result_row}>
           <Image resizeMode='contain' source={images.basket_with_vegetables_full} style={styles.basket_image}/>
           <View style={styles.caption_wrapper}>
-            <Text style={styles.count}>30</Text>
+            <Text style={styles.count}>{vegetables.length}</Text>
             <Text style={styles.caption}>vegetables</Text>
           </View>
         </View>
+
+        <TryAgainBtn resetGame={resetGame} />
       </View>
   )
 }
@@ -32,7 +39,8 @@ const styles = StyleSheet.create({
   content: {
     width: '100%',
     height: '100%',
-    justifyContent: 'space-between'
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   caption_modal: {
     fontSize: 35,
